@@ -49,6 +49,30 @@ Docker, así que normalmente no tienes que tocar nada. Si lo necesitas, puedes
 sobreescribir con variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD`,
 `JWT_SECRET`, `JWT_EXPIRATION` (en ms, por defecto 24h) y `CORS_ORIGINS`.
 
+#### Sobre las credenciales en `application.properties`
+
+A propósito dejé valores por defecto (password de la base, `JWT_SECRET`) dentro de
+`application.properties` y versionados en el repo. Es una decisión consciente **solo
+porque esto es un entorno local y de prueba**: son credenciales de un SQL Server que
+corre en un contenedor en tu máquina y un secreto JWT de ejemplo, nada apunta a un
+servidor real ni a datos de nadie. Así el proyecto se clona y se corre sin tener que
+configurar nada.
+
+**En producción esto no se hace.** Subir secretos reales al repositorio es un riesgo
+porque quedan en el historial de git para siempre y, si el repo es público, se
+filtran. El enfoque correcto, y que este código ya soporta, es:
+
+- No poner el valor real en el archivo. Fíjate que cada propiedad usa la forma
+  `${DB_PASSWORD:valor-por-defecto}`: primero intenta leer la **variable de entorno**
+  y solo cae al default si no existe. En producción se definen esas variables
+  (`DB_PASSWORD`, `JWT_SECRET`, etc.) en el entorno del servidor y el default deja de
+  usarse.
+- Los secretos reales se manejan fuera del repo: variables de entorno del sistema, un
+  archivo local ignorado por git (`application-local.properties` / `.env`), o un gestor
+  de secretos (AWS Secrets Manager, Vault, las "secrets" del proveedor de despliegue, etc.).
+- El `JWT_SECRET` se rota periódicamente y es distinto en cada ambiente
+  (dev / staging / prod).
+
 ### Frontend
 
 ```bash
